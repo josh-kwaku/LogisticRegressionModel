@@ -2,10 +2,16 @@
 #include "linear_regression.cpp"
 
 int main() {
-    MatrixXd train_data = MatrixXd::Random(2,3);
-    VectorXd y_values = VectorXd::Random(2);
-    VectorXd weights = VectorXd::Random(3);
-    double bias = 0.123;
+    MatrixXd train_data {
+        {2104.0, 5.0, 1.0, 45.0},
+            {1416.0, 3.0, 2.0, 40.0},
+            {852.0, 2.0, 1.0, 35.0}
+    };
+    VectorXd y_values(3);
+    y_values << 460.0, 232.0, 178.0;
+    VectorXd weights(4);
+    weights.setZero();
+    double bias = 0;
 
     CostFuncParams cfParams = {
         train_data,
@@ -21,9 +27,15 @@ int main() {
         bias
     };
 
-    std::cout << cost(cfParams) << '\n';
+    // std::cout << cost(cfParams) << '\n';
+    int iterations = 5000;
     GradientResult result = compute_gradient(cgParams);
-    std::cout << result << '\n';
+    // std::cout << result << "\n\n\n";
+    auto data = GradientDescentParams(train_data, y_values, weights, bias, 0.0001, iterations);
+    auto gd_result = gradient_descent(data);
+    // std::cout << "updated weights = " << weights << '\n';
+    // std::cout << "costs = " << gd_result.cost_values << '\n';
+    show_learning_curve(gd_result, iterations);
 }
 
 // training data - set of examples
