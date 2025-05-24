@@ -27,22 +27,23 @@ int main() {
         bias
     };
 
-    // std::cout << cost(cfParams) << '\n';
-    int iterations = 5000;
-    GradientResult result = compute_gradient(cgParams);
-    // std::cout << result << "\n\n\n";
-    auto data = GradientDescentParams(train_data, y_values, weights, bias, 0.0001, iterations);
+    // Train
+    int iterations = 100;
+    auto normalization_result = normalize(train_data);
+    auto data = GradientDescentParams(normalization_result.normalized_values, y_values, weights, bias, 0.1, iterations);
     auto gd_result = gradient_descent(data);
-    // std::cout << "updated weights = " << weights << '\n';
-    // std::cout << "costs = " << gd_result.cost_values << '\n';
-    show_learning_curve(gd_result, iterations);
-}
 
-// training data - set of examples
-// fit a model to that data so that it can generalize
-    // by that we mean getting values for parameters w and b to fit the best curve to the data
-    // to get values for parameters w and b, we need gradient descent
-    // how accurate w and b are depends 
-        // on how much we can minimize the cost function J
-        // the learning rate alpha
-    //
+    // show_learning_curve(gd_result, iterations);
+
+    // Predict
+    VectorXd x_values(4);
+    x_values << 2104.0, 5.0, 1.0, 45.0;
+    auto x_values_normalized = normalize_with_scaling_values(x_values, normalization_result.scalings);
+    PredictParams ppParams = {
+        x_values_normalized,
+        data.weights,
+        data.bias,
+    };
+    double prediction = predict(ppParams);
+    std::cout << "prediction = " << prediction << '\n';
+}

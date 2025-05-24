@@ -28,6 +28,11 @@ struct CostFuncParams {
     }
 };
 
+/**
+ * Cost function computation
+ * @param params
+ * @return double
+ */
 double cost(CostFuncParams& params) {
     const int m = params.train_data.rows();
     double sum = 0.0;
@@ -65,6 +70,11 @@ std::ostream& operator<<(std::ostream &os, const GradientResult &result) {
     return os;
 }
 
+/**
+ * Computes the derivative of w and b given the training data, weights, y_values and bias
+ * @param params
+ * @return GradientResult
+ */
 GradientResult compute_gradient(const ComputeGradientParams& params) {
     const auto dot_product = params.train_data * params.weights;
     const int m = params.train_data.rows();
@@ -101,7 +111,12 @@ struct GradientDescentResult {
     RowVectorXd cost_values;
 };
 
- GradientDescentResult gradient_descent(GradientDescentParams& params) {
+/**
+ * Modifies the input weights and bias values
+ * @param params
+ * @return GradientDescentResult
+ */
+GradientDescentResult gradient_descent(GradientDescentParams& params) {
     VectorXd new_weights(params.weights.rows());
     new_weights.setZero();
     double new_bias = 0.0;
@@ -125,26 +140,66 @@ void show_learning_curve(const GradientDescentResult& result, const int iteratio
      auto x_values = RowVectorXi::LinSpaced(iterations, 0, iterations - 1);
      std::vector<int> iters(x_values.begin(), x_values.end());
      std::vector<double> costs(result.cost_values.begin(), result.cost_values.end());
-     for (auto iter : costs) {
-         std::cout << "iters = " << iter << std::endl;
-     }
      plot(iters, costs, "-o");
      show();
  }
 
-// double stddev(const MatrixXd& mat) {
-//      const double variance = (mat.array() - mat.mean()).square().sum() / mat.rows();
-//      return sqrt(variance);
-// }
-//
-//
-// void normalize(MatrixXd& mat) {
-//      int m = mat.cols();
-//      for (int i = 0; i < m; i++) {
-//          auto col = mat.col(i);
-//          double std = stddev(col);
-//      }
-// }
+double stddev(const MatrixXd& mat) {
+     const double variance = (mat.array() - mat.mean()).square().sum() / mat.size();
+     return sqrt(variance);
+}
+
+struct NormalizationScalingValues {
+     double mean;
+     double stddev;
+ };
+struct NormalizeResult {
+    std::vector<NormalizationScalingValues> scalings;
+    MatrixXd normalized_values;
+};
+
+/**
+ * Z-score normalization
+ * @param mat
+ * @return NormalizeResult
+ */
+NormalizeResult normalize(MatrixXd &mat) {
+    const int m = mat.cols();
+    std::vector<NormalizationScalingValues> scaling_values;
+    MatrixXd result(mat.rows(), m);
+    for (int i = 0; i < m; i++) {
+        auto col = mat.col(i);
+        double mean = col.mean();
+        double standard_deviation = stddev(col);
+        result.col(i) = (col.array() - mean) / standard_deviation;
+        scaling_values.push_back({mean, standard_deviation});
+    }
+    return {scaling_values, result};
+}
+
+/**
+ * Normalize single input data using the mean and std dev for each feature computed from the training data
+ * @param vec
+ * @param scaling_values
+ * @return VectorXd
+ */
+VectorXd normalize_with_scaling_values(const VectorXd& vec, const std::vector<NormalizationScalingValues>& scaling_values) {
+    int m = vec.size();
+    VectorXd result(m);
+    for (int i = 0; i < m; i++) {
+        result(i) = (vec(i) - scaling_values[i].mean) / scaling_values[i].stddev;
+    }
+    return result;
+}
+
+struct PredictParams {
+     VectorXd x_values;
+     VectorXd weights;
+     double bias;
+ };
+double predict(const PredictParams& params) {
+     return params.x_values.dot(params.weights) + params.bias;
+ }
 
 
 
