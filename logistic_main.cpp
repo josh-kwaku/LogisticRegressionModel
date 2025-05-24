@@ -58,7 +58,7 @@ int main() {
 
     // Predict
     VectorXd x_values(4);
-    x_values << 120.0, 5.0, 6.0, 90.0;
+    x_values << 40.0, 4.0, 6.0, 65.0;
     auto x_values_normalized = normalize_with_scaling_values(x_values, normalization_result.scalings);
     PredictParams ppParams = {
         x_values_normalized,
@@ -66,5 +66,6 @@ int main() {
         data.bias,
     };
     double prediction = predict(ppParams);
-    std::cout << "prediction = " << prediction << '\n';
+    int ans = prediction <= 0.5 ? 0 : 1;
+    std::cout << "prediction = " << ans << '\n';
 }
